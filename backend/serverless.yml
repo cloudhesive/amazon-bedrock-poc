@@ -1,0 +1,135 @@
+service: amazon-bedrock-nodejs-demo
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "bedrock:*"
+      Resource: "*"
+      Sid: "BedrockAll"
+    - Effect: Allow
+      Action:
+        - "kms:DescribeKey"
+      Resource: "arn:*:kms:*:::*"
+      Sid: "DescribeKey"
+    - Effect: Allow
+      Action:
+        - "iam:ListRoles"
+        - "ec2:DescribeVpcs"
+        - "ec2:DescribeSubnets"
+        - "ec2:DescribeSecurityGroups"
+      Resource: "*"
+      Sid: "APIsWithAllResourceAccess"
+    - Effect: Allow
+      Action:
+        - "iam:PassRole"
+      Resource: "arn:aws:iam::*:role/*AmazonBedrock*"
+      Sid: "PassRoleToBedrock"
+      Condition:
+        StringEquals:
+          iam:PassedToService: "bedrock.amazonaws.com"
+    - Effect: Allow
+      Action:
+        - "logs:*"
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - "cognito:*"
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - "s3:PutBucketPolicy"
+      Resource: "*"
+
+functions:
+  bedrock-function:
+    name: bedrock-function
+    memorySize: 512
+    timeout: 30
+    handler: index.modelHandler
+    environment:
+      REGION: us-east-1
+      MODEL_ID: anthropic.claude-v2
+      MAX_TOKENS: 300
+      TEMPERATURE: 0.1
+      TOP_P: 0.9
+    events:
+      - http:
+          path: message
+          method: POST
+          cors: true
+  login-function:
+    name: login-function
+    memorySize: 512
+    timeout: 30
+    handler: index.loginHandler
+    environment:
+      USER_POOL_ID: !Ref UserPool
+      USER_POOL_CLIENT_ID: !Ref UserPoolClient
+    events:
+      - http:
+          path: login
+          method: POST
+          cors: true
+resources:
+  Resources:
+    WebAppBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-web-bucket
+        WebsiteConfiguration:
+          IndexDocument: index.html
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          IgnorePublicAcls: true
+          BlockPublicPolicy: false
+
+    WebAppBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref WebAppBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action:
+                - "s3:GetObject"
+              Resource: !Sub "${WebAppBucket.Arn}/*"
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: BedrockUserPool
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId: !Ref UserPool
+        ClientName: BedrockAppClient
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+          - USER_PASSWORD_AUTH
+
+  Outputs:
+    WebAppBucketName:
+      Description: "The name of the Web App S3 bucket"
+      Value: !Ref WebAppBucket
+      Export:
+        Name: ${self:service}-web-bucket
+    UserPoolId:
+      Value: !Ref UserPool
+      Export:
+        Name: UserPoolId
