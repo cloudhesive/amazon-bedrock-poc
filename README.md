@@ -1,6 +1,6 @@
 # 📚 Chat IA Generativa con AWS Bedrock
 
-Este proyecto implementa un chat basado en IA generativa utilizando **AWS Bedrock**. La aplicación está desarrollada en **Node.js** y se despliega usando **AWS Lambda** y **API Gateway** para gestionar las solicitudes de los usuarios. La interfaz de usuario se almacena en un bucket de **Amazon S3** como un sitio web estático.
+Este proyecto implementa un chat basado en IA generativa utilizando **AWS Bedrock**. La aplicación está desarrollada en **Node.js** y se despliega usando **AWS Lambda** y **API Gateway** para gestionar las solicitudes de los usuarios. La interfaz de usuario se almacena en un bucket de **Amazon S3** como una aplicación React.
 
 ## 📑 Tabla de Contenidos
 - [Descripción del Proyecto](#📋-descripción-del-proyecto)
@@ -13,7 +13,7 @@ Este proyecto implementa un chat basado en IA generativa utilizando **AWS Bedroc
 
 ## 📋 Descripción del Proyecto
 
-El chat utiliza **AWS Bedrock** para procesar las entradas de los usuarios y generar respuestas en tiempo real. El backend se desarrolla como una función **AWS Lambda** que se integra con **API Gateway** para manejar las solicitudes HTTP. El frontend es una aplicación web estática alojada en **Amazon S3** que se conecta con la API mediante peticiones HTTP. Además, se implementa **AWS Cognito** para gestionar el inicio de sesión y la autenticación de usuarios, asegurando un acceso seguro y sencillo a la aplicación.
+El chat utiliza **AWS Bedrock** para procesar las entradas de los usuarios y generar respuestas en tiempo real. El backend se desarrolla como una función **AWS Lambda** que se integra con **API Gateway** para manejar las solicitudes HTTP. El frontend es una aplicación React alojada en **Amazon S3** que se conecta con las APIs mediante peticiones HTTP. Además, se implementa **AWS Cognito** para gestionar el inicio de sesión y la autenticación de usuarios, asegurando un acceso seguro y sencillo a la aplicación.
 
 ## 🏗️ Arquitectura
 
@@ -21,7 +21,7 @@ La arquitectura del proyecto consta de los siguientes componentes:
 
 ![Diagrama de arquitectura](genAI-architecture-diagram.png)
 
-1. **Frontend**: Una aplicación web estática (HTML/CSS/JavaScript) alojada en un bucket de S3 que actúa como la interfaz de usuario.
+1. **Frontend**: Una aplicación React alojada en un bucket de S3 que actúa como la interfaz de usuario.
 2. **API Gateway**: Maneja las solicitudes de los usuarios y las redirige a la función Lambda.
 3. **AWS Lambda**: Función que procesa las solicitudes del API Gateway y llama a **AWS Bedrock** para generar las respuestas.
 4. **AWS Bedrock**: Servicio de IA generativa de AWS que responde a las consultas de los usuarios.
@@ -46,6 +46,8 @@ El despliegue de la aplicación se gestiona mediante un **workflow de GitHub Act
      - `AWS_SECRET_ACCESS_KEY`
      - `AWS_REGION` (e.g., `us-east-1`)
      - `STAGE` (e.g., `dev`, `staging` o `prod`)
+     - `COGNITO_USER_USERNAME` (Nombre de usuario del Administrador)
+     - `COGNITO_USER_PASSWORD` (Contraseña del Administrador)
 
 2. **Push de Código**:
    - Realiza un **push** a la rama `main` para activar el workflow y desplegar automáticamente.
@@ -68,6 +70,7 @@ Asegúrate de que tanto tu bucket S3 como tu API Gateway tengan configuraciones 
 ## 🖥️ Uso
 
 - Accede a la URL pública de tu bucket S3 en un navegador para ver la interfaz de usuario del chat.
+- Logeate con las credenciales de usuarios que creamos en Github Secrets, las cuales son **COGNITO_USER_USERNAME** y **COGNITO_USER_PASSWORD**
 - Escribe mensajes, y la IA generativa responderá en tiempo real a través de **AWS Bedrock**.
 
 ## 🚀 Mejoras Futuras
