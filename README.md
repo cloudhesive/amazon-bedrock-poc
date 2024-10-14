@@ -1,6 +1,6 @@
 # 📚 Chat IA Generativa con AWS Bedrock
 
-Este proyecto implementa un chat basado en IA generativa utilizando **AWS Bedrock**. La aplicación está desarrollada en **Node.js** y se despliega usando **AWS Lambda** y **API Gateway** para gestionar las solicitudes de los usuarios. La interfaz de usuario se almacena en un bucket de **Amazon S3** como una aplicación React.
+Este proyecto implementa un chat basado en IA generativa utilizando **AWS Bedrock**. La aplicación está desarrollada en **Node.js** y se despliega usando **AWS Lambda** y **API Gateway** para gestionar las solicitudes de los usuarios. La recuperación y almacenado de chats se implementa con **AWS DynamoDB** y la interfaz de usuario se almacena en un bucket de **Amazon S3** como una aplicación React.
 
 ## 📑 Tabla de Contenidos
 - [Descripción del Proyecto](#📋-descripción-del-proyecto)
@@ -13,7 +13,7 @@ Este proyecto implementa un chat basado en IA generativa utilizando **AWS Bedroc
 
 ## 📋 Descripción del Proyecto
 
-El chat utiliza **AWS Bedrock** para procesar las entradas de los usuarios y generar respuestas en tiempo real. El backend se desarrolla como una función **AWS Lambda** que se integra con **API Gateway** para manejar las solicitudes HTTP. El frontend es una aplicación React alojada en **Amazon S3** que se conecta con las APIs mediante peticiones HTTP. Además, se implementa **AWS Cognito** para gestionar el inicio de sesión y la autenticación de usuarios, asegurando un acceso seguro y sencillo a la aplicación.
+El chat utiliza **AWS Bedrock** para procesar las entradas de los usuarios y generar respuestas en tiempo real. El backend se desarrolla como una función **AWS Lambda** que se integra con **API Gateway** para manejar las solicitudes HTTP. El frontend es una aplicación React alojada en **Amazon S3** que se conecta con las APIs mediante peticiones HTTP. Además, se implementa **AWS Cognito** para gestionar el inicio de sesión y la autenticación de usuarios, asegurando un acceso seguro y sencillo a la aplicación y utilizaremos **AWS DynamoDB** para almacenar y recuperar el historial de chat.
 
 ## 🏗️ Arquitectura
 
@@ -26,6 +26,7 @@ La arquitectura del proyecto consta de los siguientes componentes:
 3. **AWS Lambda**: Función que procesa las solicitudes del API Gateway y llama a **AWS Bedrock** para generar las respuestas.
 4. **AWS Bedrock**: Servicio de IA generativa de AWS que responde a las consultas de los usuarios.
 5. **AWS Cognito**: Servicio que facilita la gestión de la autenticación y autorización de usuarios en aplicaciones web y móviles.
+6. **AWS DynamoDB**: Servicio que almacenará el historial de chat.
 
 ## 📝 Requisitos
 
@@ -75,5 +76,4 @@ Asegúrate de que tanto tu bucket S3 como tu API Gateway tengan configuraciones 
 
 ## 🚀 Mejoras Futuras
 
-- **💬 Almacenamiento de Conversaciones**: Usar **Amazon DynamoDB** para guardar y gestionar historiales de chat.
 - **💰 Optimización de Costos**: Implementar estrategias de optimización para reducir costos en las interacciones con **Bedrock**.
