@@ -5,7 +5,8 @@ const config = {
     temperature: parseFloat(process.env.TEMPERATURE) || 0.1, // Controla la aleatoriedad de las respuestas. 
     topP: parseFloat(process.env.TOP_P) || 0.9, // Restringe las opciones de respuesta basadas en probabilidades acumulativas.
     userPoolId: process.env.USER_POOL_ID,
-    clientId: process.env.USER_POOL_CLIENT_ID
+    clientId: process.env.USER_POOL_CLIENT_ID,
+    chatHistoryTable: process.env.CHAT_HISTORY_TABLE
 };
 
 module.exports = config;

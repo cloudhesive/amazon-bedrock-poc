@@ -43,7 +43,10 @@ provider:
       Action:
         - "s3:PutBucketPolicy"
       Resource: "*"
-
+    - Effect: Allow
+      Action:
+        - "dynamodb:*"
+      Resource: "*"
 functions:
   bedrock-function:
     name: bedrock-function
@@ -73,6 +76,22 @@ functions:
       - http:
           path: login
           method: POST
+          cors: true
+  get-chat-history-function:
+    name: chat-history-function
+    memorySize: 512
+    timeout: 30
+    handler: index.chatHistoryHandler
+    environment:
+      CHAT_HISTORY_TABLE: !Ref ChatHistoryTable
+    events:
+      - http:
+          path: chat/history
+          method: post
+          cors: true
+      - http:
+          path: chat/history
+          method: get
           cors: true
 resources:
   Resources:
@@ -123,6 +142,20 @@ resources:
         ExplicitAuthFlows:
           - ADMIN_NO_SRP_AUTH
           - USER_PASSWORD_AUTH
+
+    ChatHistoryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "ChatHistory"
+        AttributeDefinitions:
+          - AttributeName: chatId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: chatId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
 
   Outputs:
     WebAppBucketName:
