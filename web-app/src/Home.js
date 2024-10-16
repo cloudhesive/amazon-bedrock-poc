@@ -144,7 +144,7 @@ const Home = () => {
       <div className="flex-grow-1 d-flex flex-column">
         <nav className="navbar navbar-expand-lg navbar-light custom-navbar">
           <a className="navbar-brand" href="https://www.cloudhesivelatam.com/">
-            <img src="https://www.cloudhesive.com/wp-content/uploads/2019/08/CH_Logo_Black.png" alt="Cloudhesive Logo" height="40" />
+            <img src="https://www.cloudhesive.com/wp-content/uploads/2019/08/CH_Logo_Black.png" alt="Cloudhesive Logo"/>
           </a>
           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span className="navbar-toggler-icon"></span>
