@@ -59,6 +59,8 @@ functions:
       MAX_TOKENS: 300
       TEMPERATURE: 0.1
       TOP_P: 0.9
+      AGENT_ALIAS_ID: <Replace with your Agent Alias ID>
+      AGENT_ID: <Replace with your Agent ID>
     events:
       - http:
           path: message

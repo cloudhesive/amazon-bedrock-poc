@@ -4,9 +4,9 @@ const { verifyToken } = require('../services/tokenServices');
 
 const modelHandler = async (event) => {
     logger.info('Received event: ' + JSON.stringify(event));
-
+    let token = "";
     try {
-        await verifyToken(event.headers.Authorization);
+        token = await verifyToken(event.headers.Authorization);
     } catch (error) {
         return {
             statusCode: 401,
@@ -15,9 +15,8 @@ const modelHandler = async (event) => {
     }
 
     const requestBody = JSON.parse(event.body);
-
     try {
-        const response = await processRequest(requestBody);
+        const response = await processRequest(requestBody, token);
 
         return {
             statusCode: 200,
