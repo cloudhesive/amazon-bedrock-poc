@@ -1,11 +1,11 @@
 const logger = require('../utils/logger');
 const { invokeModel } = require('./bedrockServices');
 
-const processRequest = async (requestBody) => {
+const processRequest = async (requestBody, token) => {
     const prompt = requestBody.prompt;
 
     try {
-        const completion = await invokeModel(prompt);
+        const completion = await invokeModel(prompt, token);
         return { prompt, response: completion };
     } catch (error) {
         logger.error(error.message);

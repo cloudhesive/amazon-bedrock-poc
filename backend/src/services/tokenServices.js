@@ -9,6 +9,7 @@ const verifyToken = async (authHeader) => {
     const token = authHeader.split(' ')[1]; // "Bearer <token>"
     try {
         await getUserFromToken(token); // Solo verificamos el token
+        return token;
     } catch (error) {
         logger.error('Authentication failed: ' + error.message);
         throw new Error('Invalid token');
