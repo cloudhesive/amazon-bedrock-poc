@@ -100,7 +100,7 @@ resources:
     WebAppBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:service}-web-bucket
+        BucketName: ${self:service}-web-bucket-${aws:accountId}
         WebsiteConfiguration:
           IndexDocument: index.html
           ErrorDocument: error.html
@@ -164,7 +164,7 @@ resources:
       Description: "The name of the Web App S3 bucket"
       Value: !Ref WebAppBucket
       Export:
-        Name: ${self:service}-web-bucket
+        Name: ${self:service}-web-bucket-${aws:accountId}
     UserPoolId:
       Value: !Ref UserPool
       Export:
