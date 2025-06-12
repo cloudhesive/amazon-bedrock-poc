@@ -5,48 +5,48 @@ provider:
   name: aws
   runtime: nodejs20.x
   iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - "bedrock:*"
-      Resource: "*"
-      Sid: "BedrockAll"
-    - Effect: Allow
-      Action:
-        - "kms:DescribeKey"
-      Resource: "arn:*:kms:*:::*"
-      Sid: "DescribeKey"
-    - Effect: Allow
-      Action:
-        - "iam:ListRoles"
-        - "ec2:DescribeVpcs"
-        - "ec2:DescribeSubnets"
-        - "ec2:DescribeSecurityGroups"
-      Resource: "*"
-      Sid: "APIsWithAllResourceAccess"
-    - Effect: Allow
-      Action:
-        - "iam:PassRole"
-      Resource: "arn:aws:iam::*:role/*AmazonBedrock*"
-      Sid: "PassRoleToBedrock"
-      Condition:
-        StringEquals:
-          iam:PassedToService: "bedrock.amazonaws.com"
-    - Effect: Allow
-      Action:
-        - "logs:*"
-      Resource: "*"
-    - Effect: Allow
-      Action:
-        - "cognito:*"
-      Resource: "*"
-    - Effect: Allow
-      Action:
-        - "s3:PutBucketPolicy"
-      Resource: "*"
-    - Effect: Allow
-      Action:
-        - "dynamodb:*"
-      Resource: "*"
+  - Effect: Allow
+    Action:
+    - "bedrock:*"
+    Resource: "*"
+    Sid: "BedrockAll"
+  - Effect: Allow
+    Action:
+    - "kms:DescribeKey"
+    Resource: "arn:*:kms:*:::*"
+    Sid: "DescribeKey"
+  - Effect: Allow
+    Action:
+    - "iam:ListRoles"
+    - "ec2:DescribeVpcs"
+    - "ec2:DescribeSubnets"
+    - "ec2:DescribeSecurityGroups"
+    Resource: "*"
+    Sid: "APIsWithAllResourceAccess"
+  - Effect: Allow
+    Action:
+    - "iam:PassRole"
+    Resource: "arn:aws:iam::*:role/*AmazonBedrock*"
+    Sid: "PassRoleToBedrock"
+    Condition:
+      StringEquals:
+        iam:PassedToService: "bedrock.amazonaws.com"
+  - Effect: Allow
+    Action:
+    - "logs:*"
+    Resource: "*"
+  - Effect: Allow
+    Action:
+    - "cognito:*"
+    Resource: "*"
+  - Effect: Allow
+    Action:
+    - "s3:PutBucketPolicy"
+    Resource: "*"
+  - Effect: Allow
+    Action:
+    - "dynamodb:*"
+    Resource: "*"
 functions:
   bedrock-function:
     name: bedrock-function
@@ -54,18 +54,14 @@ functions:
     timeout: 30
     handler: index.modelHandler
     environment:
-      REGION: us-east-1
-      MODEL_ID: anthropic.claude-v2
-      MAX_TOKENS: 300
-      TEMPERATURE: 0.1
-      TOP_P: 0.9
-      AGENT_ALIAS_ID: <Replace with your Agent Alias ID>
-      AGENT_ID: <Replace with your Agent ID>
+      REGION: ${env:AWS_REGION}
+      AGENT_ALIAS_ID: ${env:AGENT_ALIAS_ID}
+      AGENT_ID: ${env:AGENT_ID}
     events:
-      - http:
-          path: message
-          method: POST
-          cors: true
+    - http:
+        path: message
+        method: POST
+        cors: true
   login-function:
     name: login-function
     memorySize: 512
@@ -75,10 +71,10 @@ functions:
       USER_POOL_ID: !Ref UserPool
       USER_POOL_CLIENT_ID: !Ref UserPoolClient
     events:
-      - http:
-          path: login
-          method: POST
-          cors: true
+    - http:
+        path: login
+        method: POST
+        cors: true
   get-chat-history-function:
     name: chat-history-function
     memorySize: 512
@@ -87,14 +83,14 @@ functions:
     environment:
       CHAT_HISTORY_TABLE: !Ref ChatHistoryTable
     events:
-      - http:
-          path: chat/history
-          method: post
-          cors: true
-      - http:
-          path: chat/history
-          method: get
-          cors: true
+    - http:
+        path: chat/history
+        method: post
+        cors: true
+    - http:
+        path: chat/history
+        method: get
+        cors: true
 resources:
   Resources:
     WebAppBucket:
@@ -107,7 +103,45 @@ resources:
         PublicAccessBlockConfiguration:
           BlockPublicAcls: true
           IgnorePublicAcls: true
-          BlockPublicPolicy: false
+          BlockPublicPolicy: true
+          RestrictPublicBuckets: true
+
+    CloudFrontOAC:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: BedrockWebOAC
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
+          Description: Access control for S3 origin
+
+    WebAppDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          DefaultRootObject: index.html
+          Origins:
+          - Id: WebAppOrigin
+            DomainName: !GetAtt WebAppBucket.RegionalDomainName
+            S3OriginConfig: {}
+            OriginAccessControlId: !Ref CloudFrontOAC
+          DefaultCacheBehavior:
+            TargetOriginId: WebAppOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+            - GET
+            - HEAD
+            CachedMethods:
+            - GET
+            - HEAD
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
 
     WebAppBucketPolicy:
       Type: AWS::S3::BucketPolicy
@@ -116,17 +150,21 @@ resources:
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
-            - Effect: Allow
-              Principal: "*"
-              Action:
-                - "s3:GetObject"
-              Resource: !Sub "${WebAppBucket.Arn}/*"
+          - Sid: AllowCloudFrontAccess
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${WebAppBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${WebAppDistribution}"
     UserPool:
       Type: AWS::Cognito::UserPool
       Properties:
         UserPoolName: BedrockUserPool
         AutoVerifiedAttributes:
-          - email
+        - email
         Policies:
           PasswordPolicy:
             MinimumLength: 8
@@ -142,19 +180,19 @@ resources:
         ClientName: BedrockAppClient
         GenerateSecret: false
         ExplicitAuthFlows:
-          - ADMIN_NO_SRP_AUTH
-          - USER_PASSWORD_AUTH
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
 
     ChatHistoryTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: "ChatHistory"
         AttributeDefinitions:
-          - AttributeName: chatId
-            AttributeType: S
+        - AttributeName: chatId
+          AttributeType: S
         KeySchema:
-          - AttributeName: chatId
-            KeyType: HASH
+        - AttributeName: chatId
+          KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
@@ -169,3 +207,6 @@ resources:
       Value: !Ref UserPool
       Export:
         Name: UserPoolId
+    CloudFrontURL:
+      Value: !GetAtt WebAppDistribution.DomainName
+      Description: "CloudFront distribution domain name"

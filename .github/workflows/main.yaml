@@ -3,9 +3,10 @@ name: Amazon Bedrock NodeJS Demo
 on:
   push:
     branches:
-      - "main"
-      - "agent"
+    - "main"
+    - "agent"
   workflow_dispatch:
+
 
 permissions:
   id-token: write
@@ -19,112 +20,114 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+    - name: Checkout Code
+      uses: actions/checkout@v2
 
-      - name: Setup AWS CLI
-        uses: unfor19/install-aws-cli-action@v1.0.3
-        with:
-          version: 2
-          arch: amd64
+    - name: Setup AWS CLI
+      uses: unfor19/install-aws-cli-action@v1.0.3
+      with:
+        version: 2
+        arch: amd64
 
-      - name: Verify AWS CLI Installation
-        run: aws --version
+    - name: Verify AWS CLI Installation
+      run: aws --version
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Install Node Dependencies (Backend)
-        working-directory: ./backend
-        run: npm install -g serverless@3.38.0
+    - name: Install Node Dependencies (Backend)
+      working-directory: ./backend
+      run: npm install -g serverless@3.38.0
 
-      - name: Deploy Serverless Application
-        working-directory: ./backend
-        env:
-          STAGE: ${{ secrets.STAGE }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: serverless deploy --force --verbose --stage $STAGE --region $AWS_REGION
+    - name: Deploy Serverless Application
+      working-directory: ./backend
+      env:
+        AGENT_ALIAS_ID: ${{ vars.AGENT_ALIAS_ID }}
+        AGENT_ID: ${{ vars.AGENT_ID }}
+        STAGE: ${{ secrets.STAGE }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+      run: serverless deploy --force --verbose --stage $STAGE --region $AWS_REGION
 
-      - name: Fetch Service and Stack Information
-        working-directory: ./backend
-        id: stack_info
-        env:
-          STAGE: ${{ secrets.STAGE }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Fetching service name using serverless..."
-          SERVICE_NAME=$(serverless info --stage $STAGE --region $AWS_REGION --verbose | grep 'service:' | awk '{print $2}')
-          echo "service_name=$SERVICE_NAME" >> $GITHUB_ENV
+    - name: Fetch Service and Stack Information
+      working-directory: ./backend
+      id: stack_info
+      env:
+        STAGE: ${{ secrets.STAGE }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+      run: |
+        echo "Fetching service name using serverless..."
+        SERVICE_NAME=$(serverless info --stage $STAGE --region $AWS_REGION --verbose | grep 'service:' | awk '{print $2}')
+        echo "service_name=$SERVICE_NAME" >> $GITHUB_ENV
 
-          STACK_NAME="${SERVICE_NAME}-${STAGE}"
-          echo "stack_name=$STACK_NAME" >> $GITHUB_ENV
+        STACK_NAME="${SERVICE_NAME}-${STAGE}"
+        echo "stack_name=$STACK_NAME" >> $GITHUB_ENV
 
-          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
-          echo "user_pool_id=$USER_POOL_ID" >> $GITHUB_ENV
+        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
+        echo "user_pool_id=$USER_POOL_ID" >> $GITHUB_ENV
 
-          S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='WebAppBucketName'].OutputValue" --output text)
-          echo "s3_bucket_name=$S3_BUCKET_NAME" >> $GITHUB_ENV
+        S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='WebAppBucketName'].OutputValue" --output text)
+        echo "s3_bucket_name=$S3_BUCKET_NAME" >> $GITHUB_ENV
 
-          API_URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='ServiceEndpoint'].OutputValue" --output text)
-          echo "api_url=$API_URL" >> $GITHUB_ENV
+        API_URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='ServiceEndpoint'].OutputValue" --output text)
+        echo "api_url=$API_URL" >> $GITHUB_ENV
 
-      - name: Create and Validate Cognito User
-        env:
-          COGNITO_USER_USERNAME: ${{ secrets.COGNITO_USER_USERNAME }}
-          COGNITO_USER_PASSWORD: ${{ secrets.COGNITO_USER_PASSWORD }}
-          USER_POOL_ID: ${{ env.user_pool_id }}
-        run: |
-          echo "Checking if Cognito user $COGNITO_USER_USERNAME already exists..."
-          USER_EXISTS=$(aws cognito-idp list-users \
+    - name: Create and Validate Cognito User
+      env:
+        COGNITO_USER_USERNAME: ${{ secrets.COGNITO_USER_USERNAME }}
+        COGNITO_USER_PASSWORD: ${{ secrets.COGNITO_USER_PASSWORD }}
+        USER_POOL_ID: ${{ env.user_pool_id }}
+      run: |
+        echo "Checking if Cognito user $COGNITO_USER_USERNAME already exists..."
+        USER_EXISTS=$(aws cognito-idp list-users \
+          --user-pool-id "$USER_POOL_ID" \
+          --filter "username = \"$COGNITO_USER_USERNAME\"" \
+          --query "Users[0]" \
+          --output text)
+
+        if [ "$USER_EXISTS" != "None" ]; then
+          echo "User $COGNITO_USER_USERNAME already exists. Skipping creation."
+        else
+          echo "Creating Cognito user..."
+          aws cognito-idp admin-create-user \
             --user-pool-id "$USER_POOL_ID" \
-            --filter "username = \"$COGNITO_USER_USERNAME\"" \
-            --query "Users[0]" \
-            --output text)
+            --username "$COGNITO_USER_USERNAME"
+          echo "User $COGNITO_USER_USERNAME created successfully."
 
-          if [ "$USER_EXISTS" != "None" ]; then
-            echo "User $COGNITO_USER_USERNAME already exists. Skipping creation."
-          else
-            echo "Creating Cognito user..."
-            aws cognito-idp admin-create-user \
-              --user-pool-id "$USER_POOL_ID" \
-              --username "$COGNITO_USER_USERNAME"
-            echo "User $COGNITO_USER_USERNAME created successfully."
+          echo "Setting password for Cognito user..."
+          aws cognito-idp admin-set-user-password \
+            --user-pool-id "$USER_POOL_ID" \
+            --username "$COGNITO_USER_USERNAME" \
+            --password "$COGNITO_USER_PASSWORD" \
+            --permanent
+          echo "Password set successfully for user $COGNITO_USER_USERNAME."
+        fi
 
-            echo "Setting password for Cognito user..."
-            aws cognito-idp admin-set-user-password \
-              --user-pool-id "$USER_POOL_ID" \
-              --username "$COGNITO_USER_USERNAME" \
-              --password "$COGNITO_USER_PASSWORD" \
-              --permanent
-            echo "Password set successfully for user $COGNITO_USER_USERNAME."
-          fi
+    - name: Create .env File for React App
+      working-directory: ./web-app
+      run: |
+        echo "Creating .env file..."
+        echo "REACT_APP_API_URL=${{ env.api_url }}" >> .env
 
-      - name: Create .env File for React App
-        working-directory: ./web-app
-        run: |
-          echo "Creating .env file..."
-          echo "REACT_APP_API_URL=${{ env.api_url }}" >> .env
+    - name: Upload Web App to S3 Bucket
+      working-directory: ./web-app
+      env:
+        S3_BUCKET_NAME: ${{ env.s3_bucket_name }}
+        API_URL: ${{ env.api_url }}
+      run: |
+        echo "Installing web app dependencies..."
+        npm install
 
-      - name: Upload Web App to S3 Bucket
-        working-directory: ./web-app
-        env:
-          S3_BUCKET_NAME: ${{ env.s3_bucket_name }}
-          API_URL: ${{ env.api_url }}
-        run: |
-          echo "Installing web app dependencies..."
-          npm install
+        echo "Building the web app..."
+        npm run build
 
-          echo "Building the web app..."
-          npm run build
+        echo "Uploading build to S3..."
+        aws s3 sync build/ "s3://$S3_BUCKET_NAME"
 
-          echo "Uploading build to S3..."
-          aws s3 sync build/ "s3://$S3_BUCKET_NAME"
+        echo "Uploading error.html to S3..."
+        aws s3 cp pages/error.html "s3://$S3_BUCKET_NAME/error.html"
 
-          echo "Uploading error.html to S3..."
-          aws s3 cp pages/error.html "s3://$S3_BUCKET_NAME/error.html"
-
-          echo "Web app and error.html uploaded to S3 bucket $S3_BUCKET_NAME successfully."
+        echo "Web app and error.html uploaded to S3 bucket $S3_BUCKET_NAME successfully."
