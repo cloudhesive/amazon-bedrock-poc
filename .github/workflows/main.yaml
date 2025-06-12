@@ -57,10 +57,9 @@ jobs:
       id: stack_info
       env:
         STAGE: ${{ secrets.STAGE }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
         echo "Fetching service name using serverless..."
-        SERVICE_NAME=$(serverless info --stage $STAGE --region $AWS_REGION --verbose | grep 'service:' | awk '{print $2}')
+        SERVICE_NAME=$(grep '^service:' serverless.yml | awk '{print $2}')
         echo "service_name=$SERVICE_NAME" >> $GITHUB_ENV
 
         STACK_NAME="${SERVICE_NAME}-${STAGE}"
