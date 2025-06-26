@@ -3,12 +3,7 @@ import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from "@headlessu
 import { Cog6ToothIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { DashboardContext } from "./dashboardContext";
-
-const chats = [
-  { id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
-  { id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
-  { id: 3, name: "Workcation", href: "#", initial: "W", current: false },
-];
+import { ChatContext, type ChatContextType } from "../chat/chatProvider";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -16,6 +11,9 @@ function classNames(...classes: string[]) {
 
 export const Sidebar = () => {
   const { sidebarOpen, handleSidebarOpen } = useContext(DashboardContext) as DashboardContextType;
+  const { chats } = useContext(ChatContext) as ChatContextType;
+
+  console.log("chats", chats);
   return (
     <>
       {/* Sidebar móvil */}
@@ -48,21 +46,18 @@ export const Sidebar = () => {
               <nav className="flex flex-1 flex-col">
                 <ul className="flex flex-1 flex-col gap-y-7">
                   <li>
-                    <div className="text-xs font-semibold text-gray-400">Your teams</div>
+                    <div className="text-xs font-semibold text-gray-400">Chats</div>
                     <ul className="-mx-2 mt-2 space-y-1">
                       {chats.map((chat) => (
-                        <li key={chat.name}>
+                        <li key={chat.id}>
                           <a
-                            href={chat.href}
+                            href={`/chat/${chat.id}`}
                             className={classNames(
-                              chat.current ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white",
+                              "text-gray-400 hover:bg-gray-800 hover:text-white",
                               "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
                             )}
                           >
-                            <span className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-[0.625rem] font-medium text-gray-400 group-hover:text-white">
-                              {chat.initial}
-                            </span>
-                            <span className="truncate">{chat.name}</span>
+                            <span className="truncate ml-2">{chat.name}</span>
                           </a>
                         </li>
                       ))}
@@ -102,18 +97,15 @@ export const Sidebar = () => {
               <div className="text-xs font-semibold text-gray-400">Your teams</div>
               <ul className="-mx-2 mt-2 space-y-1">
                 {chats.map((chat) => (
-                  <li key={chat.name}>
+                  <li key={chat.id}>
                     <a
-                      href={chat.href}
+                      href={`/chat/${chat.id}`}
                       className={classNames(
-                        chat.current ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white",
+                        "text-gray-400 hover:bg-gray-800 hover:text-white",
                         "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
                       )}
                     >
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-[0.625rem] font-medium text-gray-400 group-hover:text-white">
-                        {chat.initial}
-                      </span>
-                      <span className="truncate">{chat.name}</span>
+                      <span className="truncate ml-2">{chat.name}</span>
                     </a>
                   </li>
                 ))}

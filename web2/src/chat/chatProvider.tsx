@@ -17,10 +17,12 @@ export type ChatContextType = {
   chats: Chat[];
   chatDisabled: boolean;
   chatActiveId: string;
+  loadingChat: boolean;
   setChatActiveId: (id: string) => void;
   sendMessage: (message: string, sender: string, chatId?: string) => void;
   receiveMessage: (message: string, sender: string, chatId: string) => void;
   setChatDisabled: (disabled: boolean) => void;
+  setLoadingChat: (loading: boolean) => void;
 };
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -29,14 +31,29 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatActiveId, setChatActiveId] = useState<string>("");
   const [chatDisabled, setChatDisabled] = useState<boolean>(false);
+  const [loadingChat, setLoadingChat] = useState<boolean>(false);
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const history = await getHistoryMessagesService(token);
-        // Suponiendo que history es un array de chats con formato Chat[]
-        setChats(history);
+        const chatHistory: Chat[] = [];
+        const history: [] = await getHistoryMessagesService(token);
+        history.forEach((chat: any) => {
+          if (chat.userMessages) {
+            const newChat: Chat = {
+              id: chat.chatId,
+              name: chat.userMessages[0].slice(0, 20) + "...",
+              messages: [],
+            };
+            chat.userMessages.forEach((message: any, index: number) => {
+              newChat.messages.push({ sender: "me", message: message });
+              newChat.messages.push({ sender: "assistant", message: chat.botMessages[index] });
+            });
+            chatHistory.push(newChat);
+          }
+        });
+        setChats(chatHistory);
       } catch (error) {
         console.error("Error al obtener historial de mensajes:", error);
       }
@@ -103,7 +120,17 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   console.log(chats);
 
-  const value = { sendMessage, receiveMessage, chats, chatActiveId, setChatActiveId, chatDisabled, setChatDisabled };
+  const value = {
+    sendMessage,
+    receiveMessage,
+    chats,
+    chatActiveId,
+    setChatActiveId,
+    chatDisabled,
+    setChatDisabled,
+    loadingChat,
+    setLoadingChat,
+  };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
