@@ -103,13 +103,13 @@ jobs:
           fi
 
       - name: Create .env File for React App
-        working-directory: ./web-app
+        working-directory: ./web2
         run: |
           echo "Creating .env file..."
-          echo "REACT_APP_API_URL=${{ env.api_url }}" >> .env
+          echo "VITE_API_URL=${{ env.api_url }}" >> .env
 
       - name: Upload Web App to S3 Bucket
-        working-directory: ./web-app
+        working-directory: ./web2
         env:
           S3_BUCKET_NAME: ${{ env.s3_bucket_name }}
           API_URL: ${{ env.api_url }}
