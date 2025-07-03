@@ -111,22 +111,22 @@ jobs:
         echo "Creating .env file..."
         echo "REACT_APP_API_URL=${{ env.api_url }}" >> .env
 
+    - name: Create .env File for React App
+      working-directory: ./web2
+      run: |
+        echo "Creating .env file..."
+        echo "VITE_API_URL=${{ env.api_url }}" >> .env
+
     - name: Upload Web App to S3 Bucket
-      working-directory: ./web-app
+      working-directory: ./web2
       env:
         S3_BUCKET_NAME: ${{ env.s3_bucket_name }}
         API_URL: ${{ env.api_url }}
       run: |
         echo "Installing web app dependencies..."
         npm install
-
-        echo "Building the web app..."
-        npm run build
-
         echo "Uploading build to S3..."
         aws s3 sync build/ "s3://$S3_BUCKET_NAME"
-
         echo "Uploading error.html to S3..."
         aws s3 cp pages/error.html "s3://$S3_BUCKET_NAME/error.html"
-
         echo "Web app and error.html uploaded to S3 bucket $S3_BUCKET_NAME successfully."
