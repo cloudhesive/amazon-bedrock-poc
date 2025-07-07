@@ -105,19 +105,24 @@ jobs:
           echo "Password set successfully for user $COGNITO_USER_USERNAME."
         fi
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
     - name: Create .env File for React App
       working-directory: ./web-app
       run: |
         echo "Creating .env file..."
         echo "REACT_APP_API_URL=${{ env.api_url }}" >> .env
 
-    - name: Create .env File for React App
+    - name: Create .env File for Vite App
       working-directory: ./web2
       run: |
         echo "Creating .env file..."
         echo "VITE_API_URL=${{ env.api_url }}" >> .env
 
-    - name: Upload Web App to S3 Bucket
+    - name: Build and Upload Web App to S3 Bucket
       working-directory: ./web2
       env:
         S3_BUCKET_NAME: ${{ env.s3_bucket_name }}
@@ -125,6 +130,8 @@ jobs:
       run: |
         echo "Installing web app dependencies..."
         npm install
+        echo "Building the web app..."
+        npm run build
         echo "Uploading build to S3..."
         aws s3 sync build/ "s3://$S3_BUCKET_NAME"
         echo "Uploading error.html to S3..."
