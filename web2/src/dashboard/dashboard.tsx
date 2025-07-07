@@ -14,7 +14,7 @@ const userNavigation = [
   { name: "Sign out", href: "#" },
 ];
 
-export default function Example() {
+export default function Dashboard() {
   const { handleSidebarOpen } = useContext(DashboardContext) as DashboardContextType;
 
   return (

@@ -5,6 +5,7 @@ import { useContext } from "react";
 import Dashboard from "./dashboard/dashboard";
 import { ChatProvider } from "./chat/chatProvider";
 import { DashboardProvider } from "./dashboard/dashboardContext";
+import { Routes, Route } from "react-router-dom";
 
 function App() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -18,7 +19,10 @@ function App() {
     <div className="h-[100dvh] w-[100vw] bg-gray-900 overflow-hidden">
       <ChatProvider>
         <DashboardProvider>
-          <Dashboard />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/chat/:chatId" element={<Dashboard />} />
+          </Routes>
         </DashboardProvider>
       </ChatProvider>
     </div>

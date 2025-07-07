@@ -4,6 +4,7 @@ import { Cog6ToothIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { DashboardContext } from "./dashboardContext";
 import { ChatContext, type ChatContextType } from "../chat/chatProvider";
+import { Link } from "react-router-dom";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -13,7 +14,6 @@ export const Sidebar = () => {
   const { sidebarOpen, handleSidebarOpen } = useContext(DashboardContext) as DashboardContextType;
   const { chats } = useContext(ChatContext) as ChatContextType;
 
-  console.log("chats", chats);
   return (
     <>
       {/* Sidebar móvil */}
@@ -50,15 +50,15 @@ export const Sidebar = () => {
                     <ul className="-mx-2 mt-2 space-y-1">
                       {chats.map((chat) => (
                         <li key={chat.id}>
-                          <a
-                            href={`/chat/${chat.id}`}
+                          <Link
+                            to={`/chat/${chat.id}`}
                             className={classNames(
                               "text-gray-400 hover:bg-gray-800 hover:text-white",
                               "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
                             )}
                           >
                             <span className="truncate ml-2">{chat.name}</span>
-                          </a>
+                          </Link>
                         </li>
                       ))}
                     </ul>
@@ -96,17 +96,28 @@ export const Sidebar = () => {
             <li>
               <div className="text-xs font-semibold text-gray-400">Your teams</div>
               <ul className="-mx-2 mt-2 space-y-1">
-                {chats.map((chat) => (
+                <li>
+                  <Link
+                    to={`/`}
+                    className={classNames(
+                      "text-gray-400 hover:bg-gray-800 hover:text-white",
+                      "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
+                    )}
+                  >
+                    <span className="truncate ml-2">New chat</span>
+                  </Link>
+                </li>
+                {chats.slice(0, 10).map((chat) => (
                   <li key={chat.id}>
-                    <a
-                      href={`/chat/${chat.id}`}
+                    <Link
+                      to={`/chat/${chat.id}`}
                       className={classNames(
                         "text-gray-400 hover:bg-gray-800 hover:text-white",
                         "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
                       )}
                     >
                       <span className="truncate ml-2">{chat.name}</span>
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
