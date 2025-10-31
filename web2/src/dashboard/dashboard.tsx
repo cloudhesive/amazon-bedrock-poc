@@ -3,19 +3,29 @@
 import { useContext } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Bars3Icon, BellIcon } from "@heroicons/react/24/outline";
-import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import {
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/20/solid";
 import { Chat } from "../chat/Chat";
 import { Sidebar } from "./sidebar";
 import { DashboardContext } from "./dashboardContext";
 import type { DashboardContextType } from "./dashboardContext";
+import { AuthContext } from "../auth/authProvider";
+import type { AuthContextType } from "../auth/authProvider";
 
 const userNavigation = [
   { name: "Your profile", href: "#" },
-  { name: "Sign out", href: "#" },
+  // { name: "Sign out", href: "#" },
 ];
 
 export default function Dashboard() {
-  const { handleSidebarOpen } = useContext(DashboardContext) as DashboardContextType;
+  const { logout } = useContext(
+    AuthContext,
+  ) as AuthContextType;
+  const { handleSidebarOpen } = useContext(
+    DashboardContext,
+  ) as DashboardContextType;
 
   return (
     <div className="h-full flex overflow-hidden bg-gray-100">
@@ -24,7 +34,10 @@ export default function Dashboard() {
       <div className="flex flex-col flex-1 lg:pl-72 overflow-hidden">
         {/* Navbar */}
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-          <button onClick={() => handleSidebarOpen(true)} className="-m-2.5 p-2.5 text-gray-700 lg:hidden">
+          <button
+            onClick={() => handleSidebarOpen(true)}
+            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+          >
             <Bars3Icon className="size-6" />
           </button>
           <div className="h-6 w-px bg-gray-900/10 lg:hidden" />
@@ -50,18 +63,31 @@ export default function Dashboard() {
                     alt=""
                   />
                   <span className="hidden lg:flex lg:items-center">
-                    <span className="ml-4 text-sm font-semibold text-gray-900">Tom Cook</span>
+                    <span className="ml-4 text-sm font-semibold text-gray-900">
+                      Tom Cook
+                    </span>
                     <ChevronDownIcon className="ml-2 size-5 text-gray-400" />
                   </span>
                 </MenuButton>
                 <MenuItems className="absolute right-0 z-10 mt-2.5 w-32 rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5">
                   {userNavigation.map((item) => (
                     <MenuItem key={item.name}>
-                      <a className="block px-3 py-1 text-sm text-gray-900 hover:bg-gray-50" href={item.href}>
+                      <a
+                        className="block px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
+                        href={item.href}
+                      >
                         {item.name}
                       </a>
                     </MenuItem>
                   ))}
+                  <MenuItem>
+                    <button
+                      className="w-full text-left block px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
+                      onClick={logout}
+                    >
+                      Sign Out
+                    </button>
+                  </MenuItem>
                 </MenuItems>
               </Menu>
             </div>
