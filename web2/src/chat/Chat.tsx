@@ -7,23 +7,26 @@ import { type ChatContextType } from "./chatProvider";
 import { useParams } from "react-router-dom";
 
 export const Chat = () => {
-  console.log("Chat aca");
-  const { chatActiveId, setChatActiveId, setLoadingChat } = useContext(ChatContext) as ChatContextType;
+  const { setChatActiveId, setLoadingChat } = useContext(
+    ChatContext,
+  ) as ChatContextType;
   const { chatId } = useParams();
-  console.log(chatId);
 
   useEffect(() => {
-    console.log("useEffect");
-    console.log(chatActiveId);
-    console.log(chatId);
-    if (chatId !== chatActiveId) {
-      if (chatId) {
-        setChatActiveId(chatId);
-        setLoadingChat(true);
-      } else {
-        setChatActiveId(crypto.randomUUID());
+    setChatActiveId((old) => {
+      // console.log("useEffect");
+      // console.log(old);
+      // console.log(chatId);
+      if (chatId === old) {
+        return old;
       }
-    }
+      if (chatId) {
+        setLoadingChat(true);
+        return chatId;
+      } else {
+        return crypto.randomUUID();
+      }
+    });
   }, [chatId]);
 
   return (

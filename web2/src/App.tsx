@@ -9,7 +9,6 @@ import { Routes, Route } from "react-router-dom";
 
 function App() {
   const { isAuthenticated } = useContext(AuthContext);
-  console.log(isAuthenticated);
 
   if (!isAuthenticated) {
     return <Auth />;

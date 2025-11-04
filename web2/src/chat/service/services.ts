@@ -28,6 +28,24 @@ export const sendMessageService = async (message: string, token: string) => {
   }
 };
 
+export const setHistoryMessagesService = async (
+  token: string,
+  userMessages: Array<string>,
+  botMessages: Array<string>,
+  chatId: string | undefined = undefined,
+) => {
+  const response = await fetch(`${apiUrl}/chat/history`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ userMessages, botMessages, chatId }),
+  });
+  const data = await response.json();
+  return data;
+};
+
 export const getHistoryMessagesService = async (token: string) => {
   const response = await fetch(`${apiUrl}/chat/history`, {
     headers: {

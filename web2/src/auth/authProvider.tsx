@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { loginService } from "./services/service";
 
 export type AuthContextType = {
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     const data = await loginService(username, password);
     console.log(data);
     if (data) {
@@ -65,13 +65,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password: true,
       });
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setIsAuthenticated(false);
     setToken("");
     localStorage.removeItem("token");
-  };
+  }, []);
 
   const value = { isAuthenticated, token, login, logout, error };
 

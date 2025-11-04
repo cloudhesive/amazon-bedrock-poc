@@ -1,6 +1,18 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { getHistoryMessagesService, sendMessageService } from "./service/services";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import {
+  getHistoryMessagesService,
+  sendMessageService,
+  setHistoryMessagesService,
+} from "./service/services";
 import { AuthContext } from "../auth/authProvider";
+import { redirect } from "react-router-dom";
 
 export type ChatMessage = {
   sender: string;
@@ -18,14 +30,16 @@ export type ChatContextType = {
   chatDisabled: boolean;
   chatActiveId: string;
   loadingChat: boolean;
-  setChatActiveId: (id: string) => void;
+  setChatActiveId: React.Dispatch<React.SetStateAction<string>>;
   sendMessage: (message: string, sender: string, chatId?: string) => void;
   receiveMessage: (message: string, sender: string, chatId: string) => void;
   setChatDisabled: (disabled: boolean) => void;
   setLoadingChat: (loading: boolean) => void;
 };
 
-export const ChatContext = createContext<ChatContextType | undefined>(undefined);
+export const ChatContext = createContext<ChatContextType | undefined>(
+  undefined,
+);
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -39,6 +53,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       try {
         const chatHistory: Chat[] = [];
         const history: [] = await getHistoryMessagesService(token);
+        // console.log("history");
+        // console.log(history);
+        // console.log("history");
         history.forEach((chat: any) => {
           if (chat.userMessages) {
             const newChat: Chat = {
@@ -48,7 +65,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             };
             chat.userMessages.forEach((message: any, index: number) => {
               newChat.messages.push({ sender: "me", message: message });
-              newChat.messages.push({ sender: "assistant", message: chat.botMessages[index] });
+              if (chat.botMessages[index]) {
+                newChat.messages.push({
+                  sender: "assistant",
+                  message: chat.botMessages[index],
+                });
+              }
             });
             chatHistory.push(newChat);
           }
@@ -64,61 +86,106 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [token]);
 
-  const sendMessage = async (message: string, sender: string, chatId?: string) => {
-    setChatDisabled(true);
-    const id = chatId || crypto.randomUUID();
-    setChatActiveId(id);
+  const sendMessage = useCallback(
+    async (message: string, sender: string, chatId?: string) => {
+      setChatDisabled(true);
+      let id = chatId || crypto.randomUUID();
+      const newChatItem: Chat = {
+        id,
+        name: sender,
+        messages: [{ sender, message }],
+      };
+      if (chatId == null) {
+        const newChatId = await saveChatHistory(newChatItem);
+        if (newChatId) {
+          id = newChatId;
+          newChatItem.id = id;
+        }
+      }
+      setChatActiveId(id);
 
-    // Agregamos el mensaje propio al estado
-    setChats((prevChats) => {
-      const chatIndex = prevChats.findIndex((chat) => chat.id === id);
-      if (chatIndex !== -1) {
+      // Agregamos el mensaje propio al estado
+      setChats((prevChats) => {
+        const chatIndex = prevChats.findIndex((chat) => chat.id === id);
+        if (chatIndex !== -1) {
+          const chat = prevChats[chatIndex];
+          const updatedChat = {
+            ...chat,
+            messages: [...chat.messages, { sender, message }],
+          };
+          const newChats = [...prevChats];
+          newChats[chatIndex] = updatedChat;
+          return newChats;
+        }
+        // Si el chat no existe, lo creamos
+        return [...prevChats, newChatItem];
+      });
+
+      // Llamada al backend
+      try {
+        const data = await sendMessageService(message, token);
+        receiveMessage(data.response, "assistant", id);
+        if (chatId == null) {
+          return redirect(`/chat/${id}`);
+        }
+      } catch (error) {
+        console.error("Error enviando mensaje al backend", error);
+        // Podés manejar errores con un mensaje especial
+        receiveMessage(
+          "Hubo un error al procesar tu mensaje.",
+          "assistant",
+          id,
+        );
+      }
+    },
+    [token],
+  );
+
+  const receiveMessage = useCallback(
+    (message: string, sender: string, chatId: string) => {
+      setChats((prevChats) => {
+        const chatIndex = prevChats.findIndex((chat) => chat.id === chatId);
+        if (chatIndex === -1) return prevChats;
+
         const chat = prevChats[chatIndex];
+
+        // Evitar duplicados exactos (opcional pero recomendado)
+        const alreadyExists = chat.messages.some(
+          (msg) => msg.message === message && msg.sender === sender,
+        );
+        if (alreadyExists) return prevChats;
+
         const updatedChat = {
           ...chat,
           messages: [...chat.messages, { sender, message }],
         };
         const newChats = [...prevChats];
         newChats[chatIndex] = updatedChat;
+        saveChatHistory(updatedChat);
         return newChats;
-      }
-      // Si el chat no existe, lo creamos
-      return [...prevChats, { id, name: sender, messages: [{ sender, message }] }];
-    });
+      });
+    },
+    [],
+  );
 
+  const saveChatHistory = useCallback(async (chat: Chat) => {
     // Llamada al backend
     try {
-      const data = await sendMessageService(message, token);
-      receiveMessage(data.response, "assistant", id);
+      const data = await setHistoryMessagesService(
+        token,
+        chat.messages
+          .filter(({ sender }) => sender === "me")
+          .map(({ message }) => message),
+        chat.messages
+          .filter(({ sender }) => sender === "assistant")
+          .map(({ message }) => message),
+        chat.id.slice(0, 4) === "chat" ? chat.id : undefined,
+      );
+      return data.chatId;
     } catch (error) {
-      console.error("Error enviando mensaje al backend", error);
-      // Podés manejar errores con un mensaje especial
-      receiveMessage("Hubo un error al procesar tu mensaje.", "assistant", id);
+      console.error("Error enviando historial al backend", error);
     }
-  };
-
-  const receiveMessage = (message: string, sender: string, chatId: string) => {
-    setChats((prevChats) => {
-      const chatIndex = prevChats.findIndex((chat) => chat.id === chatId);
-      if (chatIndex === -1) return prevChats;
-
-      const chat = prevChats[chatIndex];
-
-      // Evitar duplicados exactos (opcional pero recomendado)
-      const alreadyExists = chat.messages.some((msg) => msg.message === message && msg.sender === sender);
-      if (alreadyExists) return prevChats;
-
-      const updatedChat = {
-        ...chat,
-        messages: [...chat.messages, { sender, message }],
-      };
-      const newChats = [...prevChats];
-      newChats[chatIndex] = updatedChat;
-      return newChats;
-    });
-  };
-
-  console.log(chats);
+  }, []);
 
   const value = {
     sendMessage,

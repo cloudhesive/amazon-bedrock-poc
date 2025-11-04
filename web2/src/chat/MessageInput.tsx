@@ -1,20 +1,22 @@
 import { useContext, useState } from "react";
 import { ChatContext, type ChatContextType } from "./chatProvider";
+import { useParams } from "react-router-dom";
 
 export const MessageInput = () => {
   const [message, setMessage] = useState("");
-  const { sendMessage, chatDisabled, chatActiveId } = useContext(ChatContext) as ChatContextType;
+  const { sendMessage, chatDisabled } = useContext(ChatContext) as ChatContextType;
+  const { chatId } = useParams();
 
   const handleSendMessage = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    sendMessage(message, "me", chatActiveId);
+    sendMessage(message, "me", chatId);
     setMessage("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       const mesg = e.currentTarget.value;
-      sendMessage(mesg, "me", chatActiveId);
+      sendMessage(mesg, "me", chatId);
       setMessage("");
     }
   };
