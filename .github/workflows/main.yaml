@@ -5,6 +5,7 @@ on:
     branches:
     - "main"
     - "agent"
+    - "save-chats-agent"
   workflow_dispatch:
 
 

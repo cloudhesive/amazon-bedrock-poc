@@ -4,9 +4,9 @@ exports.handler = async (event) => {
     switch (event.httpMethod) {
         case 'POST':
             const body = JSON.parse(event.body);
-            const { userMessages, botMessages } = body;
+            const { userMessages, botMessages, chatId: id } = body;
             try {
-                const chatId = await saveChatHistory(userMessages, botMessages);
+                const chatId = await saveChatHistory(userMessages, botMessages, id);
                 return {
                     statusCode: 200,
                     headers: {
