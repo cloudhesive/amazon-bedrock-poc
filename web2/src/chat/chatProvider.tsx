@@ -124,7 +124,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           return newChats;
         }
         // Si el chat no existe, lo creamos
-        return [...prevChats, newChatItem];
+        return [newChatItem, ...prevChats];
       });
 
       // Llamada al backend
