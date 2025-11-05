@@ -54,26 +54,33 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const loadHistory = async () => {
       try {
         const chatHistory: Chat[] = [];
-        const history: [] = await getHistoryMessagesService(token);
-        history.forEach((chat: any) => {
-          if (chat.userMessages) {
-            const newChat: Chat = {
-              id: chat.chatId,
-              name: chat.userMessages[0].slice(0, 20) + "...",
-              messages: [],
-            };
-            chat.userMessages.forEach((message: any, index: number) => {
-              newChat.messages.push({ sender: "me", message: message });
-              if (chat.botMessages[index]) {
-                newChat.messages.push({
-                  sender: "assistant",
-                  message: chat.botMessages[index],
-                });
-              }
-            });
-            chatHistory.push(newChat);
-          }
-        });
+        const history: Array<{
+          chatId: string;
+          userMessages: Array<string>;
+          botMessages: Array<string>;
+          timestamp: number;
+        }> = await getHistoryMessagesService(token);
+        history
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .forEach((chat: any) => {
+            if (chat.userMessages) {
+              const newChat: Chat = {
+                id: chat.chatId,
+                name: chat.userMessages[0].slice(0, 20) + "...",
+                messages: [],
+              };
+              chat.userMessages.forEach((message: any, index: number) => {
+                newChat.messages.push({ sender: "me", message: message });
+                if (chat.botMessages[index]) {
+                  newChat.messages.push({
+                    sender: "assistant",
+                    message: chat.botMessages[index],
+                  });
+                }
+              });
+              chatHistory.push(newChat);
+            }
+          });
         setChats(chatHistory);
       } catch (error) {
         console.error("Error al obtener historial de mensajes:", error);

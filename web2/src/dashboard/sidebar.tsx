@@ -1,5 +1,10 @@
 import { type DashboardContextType } from "./dashboardContext";
-import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from "@headlessui/react";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  TransitionChild,
+} from "@headlessui/react";
 import { Cog6ToothIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { DashboardContext } from "./dashboardContext";
@@ -11,13 +16,19 @@ function classNames(...classes: string[]) {
 }
 
 export const Sidebar = () => {
-  const { sidebarOpen, handleSidebarOpen } = useContext(DashboardContext) as DashboardContextType;
+  const { sidebarOpen, handleSidebarOpen } = useContext(
+    DashboardContext,
+  ) as DashboardContextType;
   const { chats } = useContext(ChatContext) as ChatContextType;
 
   return (
     <>
       {/* Sidebar móvil */}
-      <Dialog open={sidebarOpen} onClose={handleSidebarOpen} className="relative z-50 lg:hidden">
+      <Dialog
+        open={sidebarOpen}
+        onClose={handleSidebarOpen}
+        className="relative z-50 lg:hidden"
+      >
         <DialogBackdrop
           transition
           className="fixed inset-0 bg-gray-900/80 transition-opacity duration-300 ease-linear data-closed:opacity-0"
@@ -29,7 +40,11 @@ export const Sidebar = () => {
           >
             <TransitionChild>
               <div className="absolute top-0 left-full flex w-16 justify-center pt-5 duration-300 ease-in-out data-closed:opacity-0">
-                <button type="button" onClick={() => handleSidebarOpen(false)} className="-m-2.5 p-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleSidebarOpen(false)}
+                  className="-m-2.5 p-2.5"
+                >
                   <span className="sr-only">Close sidebar</span>
                   <XMarkIcon className="size-6 text-white" />
                 </button>
@@ -46,18 +61,22 @@ export const Sidebar = () => {
               <nav className="flex flex-1 flex-col">
                 <ul className="flex flex-1 flex-col gap-y-7">
                   <li>
-                    <div className="text-xs font-semibold text-gray-400">Chats</div>
+                    <div className="text-xs font-semibold text-gray-400">
+                      Chats
+                    </div>
                     <ul className="-mx-2 mt-2 space-y-1">
-                      {chats.map((chat) => (
+                      {chats.map((chat, index) => (
                         <li key={chat.id}>
                           <Link
                             to={`/chat/${chat.id}`}
                             className={classNames(
                               "text-gray-400 hover:bg-gray-800 hover:text-white",
-                              "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
+                              "group flex gap-x-3 rounded-md p-2 text-sm font-semibold",
                             )}
                           >
-                            <span className="truncate ml-2">{chat.name}</span>
+                            <span className="truncate ml-2">
+                              {index + 1}) {chat.name}
+                            </span>
                           </Link>
                         </li>
                       ))}
@@ -94,29 +113,35 @@ export const Sidebar = () => {
               <ul className="-mx-2 space-y-1"></ul>
             </li>
             <li>
-              <div className="text-xs font-semibold text-gray-400">Your teams</div>
+              <div className="text-xs font-semibold text-gray-400">
+                Your teams
+              </div>
               <ul className="-mx-2 mt-2 space-y-1">
                 <li>
                   <Link
                     to={`/`}
                     className={classNames(
                       "text-gray-400 hover:bg-gray-800 hover:text-white",
-                      "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
+                      "group flex gap-x-3 rounded-md p-2 text-sm font-semibold",
                     )}
                   >
                     <span className="truncate ml-2">New chat</span>
                   </Link>
                 </li>
-                {chats.slice(0, 10).map((chat) => (
+              </ul>
+              <ul className="-mx-2 mt-1 space-y-1 overflow-y-scroll h-96">
+                {chats.map((chat, index) => (
                   <li key={chat.id}>
                     <Link
                       to={`/chat/${chat.id}`}
                       className={classNames(
                         "text-gray-400 hover:bg-gray-800 hover:text-white",
-                        "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
+                        "group flex gap-x-3 rounded-md p-2 text-sm font-semibold",
                       )}
                     >
-                      <span className="truncate ml-2">{chat.name}</span>
+                      <span className="truncate ml-2">
+                        {index + 1}) {chat.name}
+                      </span>
                     </Link>
                   </li>
                 ))}
