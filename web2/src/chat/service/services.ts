@@ -10,7 +10,6 @@ export const sendMessageService = async (message: string, token: string) => {
       },
       body: JSON.stringify({ prompt: message }),
     });
-    console.log("response", response);
     if (!response.ok) {
       if (response.status === 401) {
         localStorage.removeItem("token");
@@ -23,7 +22,7 @@ export const sendMessageService = async (message: string, token: string) => {
 
     return data;
   } catch (error) {
-    console.log("Error al enviar el mensaje:", error);
+    console.error("Error al enviar el mensaje:", error);
     throw error;
   }
 };

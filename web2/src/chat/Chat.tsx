@@ -14,9 +14,6 @@ export const Chat = () => {
 
   useEffect(() => {
     setChatActiveId((old) => {
-      // console.log("useEffect");
-      // console.log(old);
-      // console.log(chatId);
       if (chatId === old) {
         return old;
       }

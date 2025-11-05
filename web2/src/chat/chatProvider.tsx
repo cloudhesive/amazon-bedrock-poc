@@ -12,7 +12,7 @@ import {
   setHistoryMessagesService,
 } from "./service/services";
 import { AuthContext } from "../auth/authProvider";
-import { redirect } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export type ChatMessage = {
   sender: string;
@@ -42,6 +42,8 @@ export const ChatContext = createContext<ChatContextType | undefined>(
 );
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
+
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatActiveId, setChatActiveId] = useState<string>("");
   const [chatDisabled, setChatDisabled] = useState<boolean>(false);
@@ -53,9 +55,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       try {
         const chatHistory: Chat[] = [];
         const history: [] = await getHistoryMessagesService(token);
-        // console.log("history");
-        // console.log(history);
-        // console.log("history");
         history.forEach((chat: any) => {
           if (chat.userMessages) {
             const newChat: Chat = {
@@ -126,7 +125,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         const data = await sendMessageService(message, token);
         receiveMessage(data.response, "assistant", id);
         if (chatId == null) {
-          return redirect(`/chat/${id}`);
+          navigate(`/chat/${id}`);
+          return;
         }
       } catch (error) {
         console.error("Error enviando mensaje al backend", error);

@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = useCallback(async (username: string, password: string) => {
     const data = await loginService(username, password);
-    console.log(data);
     if (data) {
       localStorage.setItem("token", data.token);
       setIsAuthenticated(true);
